@@ -1,103 +1,84 @@
-import { useState } from 'react';
+import { useNavigation } from "@react-navigation/native";
+import { useState } from "react";
+import { ActivityIndicator, Alert, Button, StyleSheet, Text, TextInput, View } from "react-native";
+import { supabase } from "../supabase"; // Asegúrate que la ruta es correcta
 
-import { Alert, Button, StyleSheet, Text, TextInput, View } from 'react-native';
+export default function LoginScreen() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const navigation = useNavigation();
 
-import { supabase } from './supabase';
+  const handleLogin = async () => {
+    if (!email || !password) {
+      Alert.alert("Error", "Por favor ingresa correo y contraseña");
+      return;
+    }
 
-import { useNavigation } from '@react-navigation/native';
+    setLoading(true);
 
- 
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
 
-export default function LoginScreen() { 
+    setLoading(false);
 
-  const [email, setEmail] = useState(''); 
+    if (error) {
+      Alert.alert("Error", error.message);
+    } else {
+      Alert.alert("Éxito", "Has iniciado sesión");
+      // Navegar y resetear el stack para que no pueda volver al login
+      navigation.reset({
+        index: 0,
+        routes: [{ name: "Home" }], // Cambia "Home" por tu pantalla principal
+      });
+    }
+  };
 
-  const [password, setPassword] = useState(''); 
+  return (
+    <View style={styles.container}>
+      <Text style={styles.title}>Iniciar Sesión</Text>
 
-  const navigation = useNavigation(); 
+      <TextInput
+        style={styles.input}
+        placeholder="Correo"
+        value={email}
+        onChangeText={setEmail}
+        keyboardType="email-address"
+        autoCapitalize="none"
+      />
 
- 
+      <TextInput
+        style={styles.input}
+        placeholder="Contraseña"
+        value={password}
+        onChangeText={setPassword}
+        secureTextEntry
+      />
 
-  const handleLogin = async () => { 
+      {loading ? (
+        <ActivityIndicator size="large" color="#000" />
+      ) : (
+        <Button title="Login" onPress={handleLogin} />
+      )}
+    </View>
+  );
+}
 
-    const { data, error } = await supabase.auth.signInWithPassword({ 
-
-      email, 
-
-      password, 
-
-    }); 
-
- 
-
-    if (error) { 
-
-      Alert.alert('Error', error.message); 
-
-    } else { 
-
-      Alert.alert('Éxito', 'Has iniciado sesión'); 
-
-      navigation.navigate('Home'); // Cambia 'Home' por tu pantalla principal 
-
-    } 
-
-  }; 
-
- 
-
-  return ( 
-
-    <View style={styles.container}> 
-
-      <Text style={styles.title}>Iniciar Sesión</Text> 
-
-      <TextInput 
-
-        style={styles.input} 
-
-        placeholder="Correo" 
-
-        value={email} 
-
-        onChangeText={setEmail} 
-
-        keyboardType="email-address" 
-
-        autoCapitalize="none" 
-
-      /> 
-
-      <TextInput 
-
-        style={styles.input} 
-
-        placeholder="Contraseña" 
-
-        value={password} 
-
-        onChangeText={setPassword} 
-
-        secureTextEntry 
-
-      /> 
-
-      <Button title="Login" onPress={handleLogin} /> 
-
-    </View> 
-
-  ); 
-
-} 
-
- 
-
-const styles = StyleSheet.create({ 
-
-  container: { flex: 1, justifyContent: 'center', padding: 20 }, 
-
-  title: { fontSize: 24, fontWeight: 'bold', marginBottom: 20, textAlign: 'center' }, 
-
-  input: { borderWidth: 1, borderColor: '#ccc', padding: 10, marginBottom: 15, borderRadius: 5 }, 
-
-}); 
+const styles = StyleSheet.create({
+  container: { flex: 1, justifyContent: "center", padding: 20 },
+  title: {
+    fontSize: 24,
+    fontWeight: "bold",
+    marginBottom: 20,
+    textAlign: "center",
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: "#ccc",
+    padding: 10,
+    marginBottom: 15,
+    borderRadius: 5,
+  },
+});
